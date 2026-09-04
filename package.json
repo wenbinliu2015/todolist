@@ -1,0 +1,9 @@
+{
+  "name": "today-todo-list",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "build": "node build.mjs"
+  }
+}

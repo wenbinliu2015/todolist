@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="一个轻巧、专注的每日待办清单。" />
+  <title>今日清单</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17233c;
+      --muted: #75809a;
+      --line: #dfe5ef;
+      --paper: rgba(255,255,255,.88);
+      --blue: #2962ff;
+      --blue-dark: #1949d8;
+      --green: #18a979;
+      --shadow: 0 22px 70px rgba(36, 58, 102, .14);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(41,98,255,.12), transparent 28rem),
+        radial-gradient(circle at 88% 85%, rgba(24,169,121,.10), transparent 25rem),
+        #f4f7fb;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .shell { width: min(760px, calc(100% - 32px)); margin: 0 auto; padding: 72px 0; }
+    .eyebrow { margin: 0 0 10px; color: var(--blue); font-size: .8rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .top { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 26px; }
+    h1 { margin: 0; font-size: clamp(2rem, 6vw, 3.65rem); line-height: .98; letter-spacing: -.055em; }
+    .date { margin: 10px 0 0; color: var(--muted); font-size: 1rem; }
+    .progress-ring { width: 74px; height: 74px; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(var(--green) var(--progress), #e4e9f1 0); position: relative; flex: 0 0 auto; }
+    .progress-ring::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #f4f7fb; }
+    .progress-ring span { z-index: 1; font-size: .9rem; font-weight: 800; }
+    .card { border: 1px solid rgba(214,222,235,.9); border-radius: 28px; background: var(--paper); box-shadow: var(--shadow); backdrop-filter: blur(16px); overflow: hidden; }
+    .composer { display: flex; gap: 10px; padding: 18px; border-bottom: 1px solid var(--line); }
+    .composer input { min-width: 0; flex: 1; border: 1px solid var(--line); border-radius: 14px; padding: 15px 17px; outline: none; background: white; color: var(--ink); font-size: 1rem; }
+    .composer input:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(41,98,255,.1); }
+    .add { border: 0; border-radius: 14px; padding: 0 20px; color: white; background: var(--blue); font-weight: 750; box-shadow: 0 8px 20px rgba(41,98,255,.22); }
+    .add:hover { background: var(--blue-dark); }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+    .filters { display: flex; gap: 4px; }
+    .filter, .clear { border: 0; background: transparent; color: var(--muted); padding: 8px 11px; border-radius: 10px; font-size: .9rem; font-weight: 650; }
+    .filter.active { color: var(--blue); background: rgba(41,98,255,.09); }
+    .clear:hover, .filter:hover { color: var(--ink); background: #eef2f8; }
+    .list { list-style: none; margin: 0; padding: 8px 18px; }
+    .item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; padding: 14px 4px; border-bottom: 1px solid var(--line); animation: enter .22s ease-out; }
+    .item:last-child { border-bottom: 0; }
+    .check { width: 24px; height: 24px; border: 2px solid #bdc7d7; border-radius: 8px; display: grid; place-items: center; background: white; color: white; padding: 0; }
+    .done .check { border-color: var(--green); background: var(--green); }
+    .done .text { color: #9aa3b5; text-decoration: line-through; }
+    .text { line-height: 1.45; overflow-wrap: anywhere; }
+    .delete { width: 36px; height: 36px; border: 0; border-radius: 10px; color: #a5adbc; background: transparent; font-size: 1.3rem; opacity: 0; }
+    .item:hover .delete, .delete:focus-visible { opacity: 1; }
+    .delete:hover { color: #e04b59; background: #fff0f2; }
+    .empty { padding: 56px 24px; text-align: center; color: var(--muted); }
+    .empty strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 1.1rem; }
+    .footer { display: flex; justify-content: space-between; gap: 16px; margin-top: 18px; color: var(--muted); font-size: .86rem; }
+    @keyframes enter { from { opacity: 0; transform: translateY(-6px); } }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 20px, 760px); padding: 38px 0; }
+      .top { align-items: center; }
+      .progress-ring { width: 64px; height: 64px; }
+      .card { border-radius: 22px; }
+      .composer { padding: 13px; }
+      .add { padding: 0 15px; }
+      .toolbar { align-items: flex-start; flex-direction: column; padding: 12px 13px; }
+      .clear { align-self: flex-end; margin-top: -40px; }
+      .list { padding: 6px 13px; }
+      .delete { opacity: 1; }
+      .footer { padding: 0 5px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div>
+        <p class="eyebrow">My day</p>
+        <h1>今日清单</h1>
+        <p class="date" id="date"></p>
+      </div>
+      <div class="progress-ring" id="progress" aria-label="完成进度"><span>0%</span></div>
+    </header>
+
+    <section class="card" aria-label="待办清单">
+      <form class="composer" id="form">
+        <input id="taskInput" aria-label="新任务" maxlength="120" autocomplete="off" placeholder="接下来要做什么？" />
+        <button class="add" type="submit">添加</button>
+      </form>
+      <div class="toolbar">
+        <div class="filters" aria-label="筛选任务">
+          <button class="filter active" data-filter="all" type="button">全部</button>
+          <button class="filter" data-filter="active" type="button">进行中</button>
+          <button class="filter" data-filter="done" type="button">已完成</button>
+        </div>
+        <button class="clear" id="clearDone" type="button">清除已完成</button>
+      </div>
+      <ul class="list" id="list"></ul>
+      <div class="empty" id="empty" hidden><strong>清单空空如也</strong><span>添加一件今天想完成的事吧。</span></div>
+    </section>
+    <footer class="footer"><span id="count">0 项待完成</span><span>数据保存在当前设备</span></footer>
+  </main>
+
+  <script>
+    const KEY = 'daily-todos-v1';
+    const seed = [
+      { id: crypto.randomUUID(), text: '整理今天的优先事项', done: true },
+      { id: crypto.randomUUID(), text: '完成项目方案初稿', done: false },
+      { id: crypto.randomUUID(), text: '散步 20 分钟', done: false }
+    ];
+    let tasks;
+    try { tasks = JSON.parse(localStorage.getItem(KEY)) ?? seed; } catch { tasks = seed; }
+    let filter = 'all';
+    const list = document.querySelector('#list');
+    const input = document.querySelector('#taskInput');
+    const empty = document.querySelector('#empty');
+    const count = document.querySelector('#count');
+    const progress = document.querySelector('#progress');
+    const save = () => localStorage.setItem(KEY, JSON.stringify(tasks));
+    const escapeText = (value) => { const el = document.createElement('span'); el.textContent = value; return el.innerHTML; };
+    function render() {
+      const shown = tasks.filter(t => filter === 'all' || (filter === 'done' ? t.done : !t.done));
+      list.innerHTML = shown.map(t => `<li class="item ${t.done ? 'done' : ''}" data-id="${t.id}">
+        <button class="check" type="button" aria-label="${t.done ? '标记为未完成' : '标记为已完成'}">${t.done ? '✓' : ''}</button>
+        <span class="text">${escapeText(t.text)}</span>
+        <button class="delete" type="button" aria-label="删除任务">×</button>
+      </li>`).join('');
+      empty.hidden = shown.length > 0;
+      list.hidden = shown.length === 0;
+      const active = tasks.filter(t => !t.done).length;
+      const pct = tasks.length ? Math.round((tasks.length - active) / tasks.length * 100) : 0;
+      count.textContent = `${active} 项待完成`;
+      progress.style.setProperty('--progress', pct + '%');
+      progress.querySelector('span').textContent = pct + '%';
+      progress.setAttribute('aria-label', `完成进度 ${pct}%`);
+    }
+    document.querySelector('#date').textContent = new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date());
+    document.querySelector('#form').addEventListener('submit', e => {
+      e.preventDefault(); const text = input.value.trim(); if (!text) return;
+      tasks.unshift({ id: crypto.randomUUID(), text, done: false }); input.value = ''; save(); render(); input.focus();
+    });
+    list.addEventListener('click', e => {
+      const item = e.target.closest('.item'); if (!item) return;
+      if (e.target.closest('.check')) tasks = tasks.map(t => t.id === item.dataset.id ? { ...t, done: !t.done } : t);
+      if (e.target.closest('.delete')) tasks = tasks.filter(t => t.id !== item.dataset.id);
+      save(); render();
+    });
+    document.querySelectorAll('.filter').forEach(btn => btn.addEventListener('click', () => {
+      filter = btn.dataset.filter; document.querySelectorAll('.filter').forEach(b => b.classList.toggle('active', b === btn)); render();
+    }));
+    document.querySelector('#clearDone').addEventListener('click', () => { tasks = tasks.filter(t => !t.done); save(); render(); });
+    render();
+
+    const modelContext = document.modelContext;
+    if (modelContext?.registerTool) {
+      Promise.resolve(modelContext.registerTool({
+        name: 'add_todo',
+        title: '添加待办',
+        description: '向今日清单添加一个新的待办事项。',
+        inputSchema: {
+          type: 'object',
+          properties: { text: { type: 'string', minLength: 1, maxLength: 120, description: '待办内容' } },
+          required: ['text'],
+          additionalProperties: false
+        },
+        annotations: { readOnlyHint: false, untrustedContentHint: false },
+        execute({ text }) {
+          const value = typeof text === 'string' ? text.trim() : '';
+          if (!value || value.length > 120) throw new Error('待办内容应为 1–120 个字符。');
+          const task = { id: crypto.randomUUID(), text: value, done: false };
+          tasks.unshift(task); save(); render();
+          return { id: task.id, text: task.text, done: false };
+        }
+      })).catch(() => {});
+    }
+  </script>
+</body>
+</html>
