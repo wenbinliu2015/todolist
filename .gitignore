@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build and deployment artifacts
+dist/
+.site-stage/
+*.tar.gz
+*.zip
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor and OS metadata
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Test coverage and temporary files
+coverage/
+.cache/
+tmp/
+temp/
+*.tmp
