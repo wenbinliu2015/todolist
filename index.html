@@ -3,104 +3,136 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="用日历安排每天的待办事项与时间。" />
+  <meta name="description" content="聚焦今日、按优先级安排任务的日程清单。" />
   <title>日程清单</title>
   <style>
-    :root { color-scheme: light; --ink:#17233c; --muted:#75809a; --line:#dfe5ef; --paper:rgba(255,255,255,.9); --blue:#2962ff; --blue-dark:#1949d8; --green:#18a979; --danger:#e04b59; --shadow:0 22px 70px rgba(36,58,102,.13); }
+    :root { color-scheme:light; --ink:#17233c; --muted:#727e98; --line:#dfe5ef; --paper:rgba(255,255,255,.92); --blue:#2962ff; --blue-dark:#1949d8; --navy:#15233f; --green:#18a979; --amber:#e99a19; --red:#e04b59; --shadow:0 22px 65px rgba(36,58,102,.12); }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC",sans-serif; color:var(--ink); background:radial-gradient(circle at 10% 10%,rgba(41,98,255,.12),transparent 30rem),radial-gradient(circle at 90% 90%,rgba(24,169,121,.1),transparent 28rem),#f4f7fb; }
-    button,input { font:inherit; } button { cursor:pointer; }
-    .shell { width:min(1180px,calc(100% - 36px)); margin:0 auto; padding:54px 0; }
-    .top { display:flex; align-items:end; justify-content:space-between; gap:24px; margin-bottom:26px; }
-    .eyebrow { margin:0 0 9px; color:var(--blue); font-size:.8rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
-    h1 { margin:0; font-size:clamp(2.25rem,5vw,4rem); line-height:.98; letter-spacing:-.055em; }
-    .date { margin:10px 0 0; color:var(--muted); font-size:1rem; }
-    .progress-ring { width:74px; height:74px; display:grid; place-items:center; flex:0 0 auto; position:relative; border-radius:50%; background:conic-gradient(var(--green) var(--progress),#e4e9f1 0); }
-    .progress-ring::before { content:""; position:absolute; inset:7px; border-radius:50%; background:#f4f7fb; }
-    .progress-ring span { z-index:1; font-size:.9rem; font-weight:800; }
-    .workspace { display:grid; grid-template-columns:minmax(300px,.78fr) minmax(0,1.45fr); gap:20px; align-items:start; }
-    .card { border:1px solid rgba(214,222,235,.92); border-radius:26px; background:var(--paper); box-shadow:var(--shadow); backdrop-filter:blur(16px); overflow:hidden; }
-    .calendar { padding:20px; position:sticky; top:20px; }
-    .calendar-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
-    .calendar-title { margin:0; font-size:1.2rem; letter-spacing:-.02em; }
+    body { margin:0; min-height:100vh; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC",sans-serif; color:var(--ink); background:radial-gradient(circle at 8% 5%,rgba(41,98,255,.13),transparent 31rem),radial-gradient(circle at 92% 88%,rgba(24,169,121,.1),transparent 28rem),#f4f7fb; }
+    button,input,select { font:inherit; } button { cursor:pointer; }
+    .shell { width:min(1080px,calc(100% - 36px)); margin:auto; padding:52px 0 64px; }
+    .top { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:24px; }
+    .eyebrow { margin:0 0 8px; color:var(--blue); font-size:.78rem; font-weight:800; letter-spacing:.17em; text-transform:uppercase; }
+    h1 { margin:0; font-size:clamp(2.3rem,5vw,4rem); line-height:.98; letter-spacing:-.055em; }
+    .date { margin:10px 0 0; color:var(--muted); }
+    .progress { width:76px; height:76px; display:grid; place-items:center; flex:0 0 auto; position:relative; border-radius:50%; background:conic-gradient(var(--green) var(--progress),#e1e7f0 0); }
+    .progress::before { content:""; position:absolute; inset:7px; border-radius:50%; background:#f4f7fb; }
+    .progress span { position:relative; font-size:.9rem; font-weight:800; }
+    .card { border:1px solid rgba(214,222,235,.92); border-radius:26px; background:var(--paper); box-shadow:var(--shadow); overflow:hidden; backdrop-filter:blur(15px); }
+    .focus { margin-bottom:20px; color:white; border-color:rgba(255,255,255,.08); background:linear-gradient(135deg,#172746,#101c33); box-shadow:0 24px 70px rgba(20,35,64,.22); }
+    .section-head { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 22px; border-bottom:1px solid var(--line); }
+    .focus .section-head { border-color:rgba(255,255,255,.1); }
+    .section-head h2 { margin:0; font-size:1.22rem; letter-spacing:-.02em; }
+    .section-head p { margin:4px 0 0; color:var(--muted); font-size:.86rem; }
+    .focus .section-head p { color:#aebbd2; }
+    .focus-count { padding:7px 11px; border-radius:999px; color:#d8e3ff; background:rgba(255,255,255,.09); font-size:.8rem; font-weight:750; }
+    .focus-list,.task-list { list-style:none; margin:0; padding:8px 18px; }
+    .focus-item,.task-item { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:13px; align-items:center; padding:14px 4px; border-bottom:1px solid; }
+    .focus-item { border-color:rgba(255,255,255,.09); }
+    .task-item { border-color:var(--line); }
+    .focus-item:last-child,.task-item:last-child { border-bottom:0; }
+    .check { width:25px; height:25px; padding:0; display:grid; place-items:center; border:2px solid #aab7cd; border-radius:8px; color:white; background:transparent; }
+    .done .check { border-color:var(--green); background:var(--green); }
+    .task-main { min-width:0; }
+    .task-title { display:block; font-size:1rem; line-height:1.4; overflow-wrap:anywhere; }
+    .done .task-title { opacity:.55; text-decoration:line-through; }
+    .meta { display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin-top:6px; color:#acb9cf; font-size:.78rem; }
+    .task-item .meta { color:var(--muted); }
+    .priority { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:999px; font-size:.72rem; font-weight:800; }
+    .priority::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .p-high { color:#ff8690; background:rgba(224,75,89,.14); }
+    .p-medium { color:#f1b34d; background:rgba(233,154,25,.14); }
+    .p-low { color:#62d5b2; background:rgba(24,169,121,.14); }
+    .delete { width:36px; height:36px; border:0; border-radius:10px; color:#94a1b7; background:transparent; font-size:1.25rem; opacity:0; }
+    li:hover .delete,.delete:focus-visible { opacity:1; }
+    .delete:hover { color:var(--red); background:rgba(224,75,89,.1); }
+    .empty { padding:44px 24px; text-align:center; color:var(--muted); }
+    .focus .empty { color:#aebbd2; }
+    .empty strong { display:block; margin-bottom:5px; color:inherit; font-size:1rem; }
+    .add-card { margin-bottom:20px; }
+    .composer { display:grid; grid-template-columns:1.3fr .7fr; gap:13px; padding:20px 22px 22px; }
+    .field label { display:block; margin:0 0 6px 3px; color:var(--muted); font-size:.78rem; font-weight:750; }
+    .field input,.field select,.edit-grid input,.edit-grid select { width:100%; min-width:0; height:45px; padding:0 12px; border:1px solid var(--line); border-radius:12px; outline:none; color:var(--ink); background:white; }
+    .field input:focus,.field select:focus,.edit-grid input:focus,.edit-grid select:focus { border-color:var(--blue); box-shadow:0 0 0 4px rgba(41,98,255,.1); }
+    .task-field { grid-column:1/2; }
+    .priority-field { grid-column:2/3; }
+    .datetime-grid { grid-column:1/-1; display:grid; grid-template-columns:1fr .72fr 1fr .72fr; gap:10px; }
+    .add-row { grid-column:1/-1; display:flex; justify-content:flex-end; align-items:center; gap:14px; }
+    .form-error { margin:0 auto 0 0; color:var(--red); font-size:.86rem; }
+    .add { height:46px; padding:0 24px; border:0; border-radius:13px; color:white; background:var(--blue); box-shadow:0 8px 20px rgba(41,98,255,.22); font-weight:760; }
+    .add:hover { background:var(--blue-dark); }
+    .planner { display:grid; grid-template-columns:minmax(280px,.78fr) minmax(0,1.25fr); gap:20px; align-items:start; }
+    .calendar { padding:20px; }
+    .calendar-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .calendar-head h2 { margin:0; font-size:1.15rem; }
     .month-nav { display:flex; gap:6px; }
     .icon-btn { width:36px; height:36px; border:0; border-radius:11px; background:#eef2f8; color:var(--ink); font-size:1.2rem; }
     .icon-btn:hover { color:var(--blue); background:#e6edff; }
-    .weekdays,.days { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-    .weekdays span { padding:6px 0; text-align:center; color:var(--muted); font-size:.75rem; font-weight:700; }
-    .day { aspect-ratio:1; min-width:0; border:0; border-radius:12px; background:transparent; color:var(--ink); position:relative; font-size:.9rem; }
+    .weekdays,.days { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+    .weekdays span { padding:5px 0; text-align:center; color:var(--muted); font-size:.72rem; font-weight:700; }
+    .day { aspect-ratio:1; min-width:0; position:relative; border:0; border-radius:11px; color:var(--ink); background:transparent; font-size:.86rem; }
     .day:hover { background:#eef2f8; }
-    .day.today { box-shadow:inset 0 0 0 1px var(--blue); color:var(--blue); font-weight:800; }
-    .day.selected { color:white; background:var(--blue); box-shadow:0 8px 16px rgba(41,98,255,.24); font-weight:800; }
+    .day.today { color:var(--blue); box-shadow:inset 0 0 0 1px var(--blue); font-weight:800; }
+    .day.selected { color:white; background:var(--blue); box-shadow:0 7px 15px rgba(41,98,255,.24); font-weight:800; }
     .day.blank { visibility:hidden; }
-    .badge { position:absolute; right:5px; bottom:4px; min-width:15px; height:15px; padding:0 4px; display:grid; place-items:center; border-radius:8px; color:white; background:var(--green); font-size:.62rem; font-weight:800; }
+    .badge { position:absolute; right:4px; bottom:3px; min-width:14px; height:14px; padding:0 3px; display:grid; place-items:center; border-radius:8px; color:white; background:var(--green); font-size:.58rem; font-weight:800; }
     .selected .badge { color:var(--blue); background:white; }
-    .today-btn { width:100%; margin-top:16px; padding:10px; border:0; border-radius:12px; color:var(--blue); background:rgba(41,98,255,.08); font-weight:750; }
-    .composer { display:grid; grid-template-columns:1fr auto; gap:10px; padding:18px; border-bottom:1px solid var(--line); }
-    .task-field { min-width:0; grid-column:1/-1; }
-    .time-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .field label { display:block; margin:0 0 6px 3px; color:var(--muted); font-size:.78rem; font-weight:700; }
-    .composer input,.schedule input { width:100%; min-width:0; border:1px solid var(--line); border-radius:13px; padding:12px 14px; outline:none; color:var(--ink); background:white; }
-    .composer input:focus,.schedule input:focus { border-color:var(--blue); box-shadow:0 0 0 4px rgba(41,98,255,.1); }
-    .add { align-self:end; height:46px; padding:0 22px; border:0; border-radius:13px; color:white; background:var(--blue); box-shadow:0 8px 20px rgba(41,98,255,.22); font-weight:750; }
-    .add:hover { background:var(--blue-dark); }
-    .form-error { grid-column:1/-1; margin:0; color:var(--danger); font-size:.86rem; }
-    .toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 18px; border-bottom:1px solid var(--line); }
+    .today-btn { width:100%; margin-top:14px; padding:9px; border:0; border-radius:11px; color:var(--blue); background:rgba(41,98,255,.08); font-weight:750; }
+    .day-card .section-head { padding:18px 20px; }
     .filters { display:flex; gap:4px; }
-    .filter,.clear { padding:8px 11px; border:0; border-radius:10px; color:var(--muted); background:transparent; font-size:.9rem; font-weight:650; }
+    .filter,.clear { padding:7px 9px; border:0; border-radius:9px; color:var(--muted); background:transparent; font-size:.82rem; font-weight:650; }
     .filter.active { color:var(--blue); background:rgba(41,98,255,.09); }
     .filter:hover,.clear:hover { color:var(--ink); background:#eef2f8; }
-    .list { list-style:none; margin:0; padding:8px 18px; }
-    .item { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:13px; align-items:start; padding:15px 4px; border-bottom:1px solid var(--line); animation:enter .2s ease-out; }
-    .item:last-child { border-bottom:0; }
-    .check { width:25px; height:25px; margin-top:2px; padding:0; display:grid; place-items:center; border:2px solid #bdc7d7; border-radius:8px; color:white; background:white; }
-    .done .check { border-color:var(--green); background:var(--green); }
-    .task-body { min-width:0; }
-    .text { display:block; line-height:1.45; overflow-wrap:anywhere; }
-    .done .text { color:#9aa3b5; text-decoration:line-through; }
-    .schedule { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:9px; }
-    .schedule label { min-width:0; }
-    .schedule span { display:block; margin:0 0 4px 2px; color:var(--muted); font-size:.72rem; font-weight:700; }
-    .schedule input { padding:8px 9px; color:#5d6880; font-size:.78rem; }
-    .delete { width:36px; height:36px; border:0; border-radius:10px; color:#a5adbc; background:transparent; font-size:1.25rem; opacity:0; }
-    .item:hover .delete,.delete:focus-visible { opacity:1; }
-    .delete:hover { color:var(--danger); background:#fff0f2; }
-    .empty { padding:60px 24px; text-align:center; color:var(--muted); }
-    .empty strong { display:block; margin-bottom:6px; color:var(--ink); font-size:1.1rem; }
-    .footer { display:flex; justify-content:space-between; gap:16px; margin-top:18px; color:var(--muted); font-size:.86rem; }
-    @keyframes enter { from { opacity:0; transform:translateY(-5px); } }
-    @media (max-width:850px) { .workspace { grid-template-columns:1fr; } .calendar { position:static; } }
-    @media (max-width:560px) { .shell { width:min(100% - 20px,1180px); padding:34px 0; } .top { align-items:center; } .progress-ring { width:64px; height:64px; } .card { border-radius:21px; } .calendar { padding:15px; } .composer { padding:13px; grid-template-columns:1fr; } .time-fields { grid-template-columns:1fr; } .add { width:100%; } .toolbar { align-items:flex-start; flex-direction:column; padding:12px 13px; } .clear { align-self:flex-end; margin-top:-40px; } .list { padding:6px 13px; } .schedule { grid-template-columns:1fr; } .delete { opacity:1; } .footer { padding:0 5px; } }
+    .edit-grid { display:grid; grid-template-columns:1fr .7fr 1fr .7fr .7fr; gap:7px; margin-top:9px; }
+    .edit-grid input,.edit-grid select { height:34px; padding:0 7px; border-radius:9px; color:#5f6b82; font-size:.74rem; }
+    .footer { display:flex; justify-content:space-between; gap:16px; margin-top:18px; color:var(--muted); font-size:.84rem; }
+    @media (max-width:820px) { .planner { grid-template-columns:1fr; } }
+    @media (max-width:620px) { .shell { width:min(100% - 20px,1080px); padding:34px 0; } .top { align-items:center; } .progress { width:64px; height:64px; } .card { border-radius:21px; } .composer { grid-template-columns:1fr; padding:16px; } .task-field,.priority-field { grid-column:1; } .datetime-grid { grid-template-columns:1fr 1fr; } .section-head { align-items:flex-start; padding:17px 16px; } .focus-list,.task-list { padding:6px 12px; } .edit-grid { grid-template-columns:1fr 1fr; } .delete { opacity:1; } .calendar { padding:15px; } }
     @media (prefers-reduced-motion:reduce) { * { animation:none!important; } }
   </style>
 </head>
 <body>
   <main class="shell">
-    <header class="top"><div><p class="eyebrow">Plan your day</p><h1>日程清单</h1><p class="date" id="selectedLabel"></p></div><div class="progress-ring" id="progress" aria-label="完成进度"><span>0%</span></div></header>
-    <div class="workspace">
-      <aside class="card calendar" aria-label="任务日历"><div class="calendar-head"><h2 class="calendar-title" id="monthTitle"></h2><div class="month-nav"><button class="icon-btn" id="prevMonth" type="button" aria-label="上个月">‹</button><button class="icon-btn" id="nextMonth" type="button" aria-label="下个月">›</button></div></div><div class="weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div class="days" id="calendarDays"></div><button class="today-btn" id="goToday" type="button">回到今天</button></aside>
-      <section class="card" aria-label="待办清单">
-        <form class="composer" id="form"><input class="task-field" id="taskInput" aria-label="新任务" maxlength="120" autocomplete="off" placeholder="这一天要做什么？" /><div class="time-fields"><div class="field"><label for="startInput">开始时间</label><input id="startInput" type="datetime-local" required /></div><div class="field"><label for="endInput">截止时间</label><input id="endInput" type="datetime-local" required /></div></div><button class="add" type="submit">添加任务</button><p class="form-error" id="formError" hidden></p></form>
-        <div class="toolbar"><div class="filters" aria-label="筛选任务"><button class="filter active" data-filter="all" type="button">全部</button><button class="filter" data-filter="active" type="button">进行中</button><button class="filter" data-filter="done" type="button">已完成</button></div><button class="clear" id="clearDone" type="button">清除已完成</button></div>
-        <ul class="list" id="list"></ul><div class="empty" id="empty" hidden><strong>这一天还没有任务</strong><span>设定时间，安排一件要完成的事吧。</span></div>
-      </section>
+    <header class="top"><div><p class="eyebrow">Focus first</p><h1>日程清单</h1><p class="date" id="todayLabel"></p></div><div class="progress" id="progress" aria-label="今日完成进度"><span>0%</span></div></header>
+
+    <section class="card focus" aria-labelledby="focusTitle"><div class="section-head"><div><h2 id="focusTitle">今日重点</h2><p>未完成任务，以及今天开始或截止的任务</p></div><span class="focus-count" id="focusCount">0 项</span></div><ul class="focus-list" id="focusList"></ul><div class="empty" id="focusEmpty" hidden><strong>今日已清空</strong><span>没有需要关注的任务。</span></div></section>
+
+    <section class="card add-card" aria-labelledby="addTitle"><div class="section-head"><div><h2 id="addTitle">添加任务</h2><p>时间按 30 分钟设置，选择开始时间后自动预留半小时</p></div></div><form class="composer" id="form"><div class="field task-field"><label for="taskInput">任务内容</label><input id="taskInput" maxlength="120" autocomplete="off" placeholder="接下来要完成什么？" required /></div><div class="field priority-field"><label for="priorityInput">紧急程度</label><select id="priorityInput"><option value="low">低</option><option value="medium" selected>中</option><option value="high">高</option></select></div><div class="datetime-grid"><div class="field"><label for="startDate">开始日期</label><input id="startDate" type="date" required /></div><div class="field"><label for="startTime">开始时间</label><select id="startTime" required></select></div><div class="field"><label for="endDate">截止日期</label><input id="endDate" type="date" required /></div><div class="field"><label for="endTime">截止时间</label><select id="endTime" required></select></div></div><div class="add-row"><p class="form-error" id="formError" hidden></p><button class="add" type="submit">添加到清单</button></div></form></section>
+
+    <div class="planner">
+      <section class="card calendar" aria-label="任务日历"><div class="calendar-head"><h2 id="monthTitle"></h2><div class="month-nav"><button class="icon-btn" id="prevMonth" type="button" aria-label="上个月">‹</button><button class="icon-btn" id="nextMonth" type="button" aria-label="下个月">›</button></div></div><div class="weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div class="days" id="calendarDays"></div><button class="today-btn" id="goToday" type="button">回到今天</button></section>
+      <section class="card day-card" aria-labelledby="dayTitle"><div class="section-head"><div><h2 id="dayTitle">日期任务</h2><p id="selectedLabel"></p></div><div class="filters"><button class="filter active" data-filter="all" type="button">全部</button><button class="filter" data-filter="active" type="button">进行中</button><button class="filter" data-filter="done" type="button">已完成</button><button class="clear" id="clearDone" type="button">清除已完成</button></div></div><ul class="task-list" id="dayList"></ul><div class="empty" id="dayEmpty" hidden><strong>这一天没有任务</strong><span>可以从上方添加。</span></div></section>
     </div>
-    <footer class="footer"><span id="count">0 项待完成</span><span>数据保存在当前设备</span></footer>
+    <footer class="footer"><span>任务数据保存在当前设备</span><span>高优先级 · 临近截止优先</span></footer>
   </main>
   <script>
-    const KEY='daily-todos-v1'; const pad=n=>String(n).padStart(2,'0'); const dateKey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; const today=dateKey(new Date()); const atTime=(day,time)=>`${day}T${time}`;
-    const seed=[{id:crypto.randomUUID(),text:'整理今天的优先事项',done:true,startAt:atTime(today,'09:00'),endAt:atTime(today,'09:30')},{id:crypto.randomUUID(),text:'完成项目方案初稿',done:false,startAt:atTime(today,'10:00'),endAt:atTime(today,'12:00')},{id:crypto.randomUUID(),text:'散步 20 分钟',done:false,startAt:atTime(today,'18:30'),endAt:atTime(today,'19:00')}];
-    let tasks; try{tasks=JSON.parse(localStorage.getItem(KEY))??seed}catch{tasks=seed} tasks=tasks.map((t,i)=>({...t,startAt:t.startAt||atTime(today,`${pad(9+i)}:00`),endAt:t.endAt||atTime(today,`${pad(10+i)}:00`)}));
-    let selectedDate=today,visibleMonth=new Date(`${today}T12:00`),filter='all'; const list=document.querySelector('#list'),input=document.querySelector('#taskInput'),startInput=document.querySelector('#startInput'),endInput=document.querySelector('#endInput'),error=document.querySelector('#formError');
-    const escapeText=value=>{const el=document.createElement('span');el.textContent=value;return el.innerHTML}; const save=()=>localStorage.setItem(KEY,JSON.stringify(tasks)); const coversDate=(task,day)=>task.startAt.slice(0,10)<=day&&task.endAt.slice(0,10)>=day; const setDefaultTimes=()=>{startInput.value=atTime(selectedDate,'09:00');endInput.value=atTime(selectedDate,'10:00')};
-    function renderCalendar(){const y=visibleMonth.getFullYear(),m=visibleMonth.getMonth();document.querySelector('#monthTitle').textContent=`${y} 年 ${m+1} 月`;const firstOffset=(new Date(y,m,1).getDay()+6)%7,total=new Date(y,m+1,0).getDate(),cells=[];for(let i=0;i<firstOffset;i++)cells.push('<span class="day blank"></span>');for(let d=1;d<=total;d++){const key=`${y}-${pad(m+1)}-${pad(d)}`,count=tasks.filter(t=>coversDate(t,key)).length;cells.push(`<button type="button" class="day ${key===today?'today':''} ${key===selectedDate?'selected':''}" data-date="${key}" aria-label="${m+1}月${d}日，${count}项任务">${d}${count?`<span class="badge">${count}</span>`:''}</button>`)}document.querySelector('#calendarDays').innerHTML=cells.join('')}
-    function renderTasks(){const dayTasks=tasks.filter(t=>coversDate(t,selectedDate)).sort((a,b)=>a.startAt.localeCompare(b.startAt)),shown=dayTasks.filter(t=>filter==='all'||(filter==='done'?t.done:!t.done));list.innerHTML=shown.map(t=>`<li class="item ${t.done?'done':''}" data-id="${t.id}"><button class="check" type="button" aria-label="${t.done?'标记为未完成':'标记为已完成'}">${t.done?'✓':''}</button><div class="task-body"><span class="text">${escapeText(t.text)}</span><div class="schedule"><label><span>开始</span><input class="edit-start" type="datetime-local" value="${t.startAt}" aria-label="${escapeText(t.text)}的开始时间"></label><label><span>截止</span><input class="edit-end" type="datetime-local" value="${t.endAt}" aria-label="${escapeText(t.text)}的截止时间"></label></div></div><button class="delete" type="button" aria-label="删除任务">×</button></li>`).join('');list.hidden=shown.length===0;document.querySelector('#empty').hidden=shown.length>0;const active=dayTasks.filter(t=>!t.done).length,pct=dayTasks.length?Math.round((dayTasks.length-active)/dayTasks.length*100):0;document.querySelector('#count').textContent=`${active} 项待完成`;const progress=document.querySelector('#progress');progress.style.setProperty('--progress',pct+'%');progress.querySelector('span').textContent=pct+'%';progress.setAttribute('aria-label',`完成进度 ${pct}%`);document.querySelector('#selectedLabel').textContent=new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(`${selectedDate}T12:00`))}
-    const render=()=>{renderCalendar();renderTasks()};
-    document.querySelector('#calendarDays').addEventListener('click',e=>{const btn=e.target.closest('[data-date]');if(!btn)return;selectedDate=btn.dataset.date;visibleMonth=new Date(`${selectedDate}T12:00`);setDefaultTimes();render()}); document.querySelector('#prevMonth').addEventListener('click',()=>{visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth()-1,1);renderCalendar()}); document.querySelector('#nextMonth').addEventListener('click',()=>{visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth()+1,1);renderCalendar()}); document.querySelector('#goToday').addEventListener('click',()=>{selectedDate=today;visibleMonth=new Date(`${today}T12:00`);setDefaultTimes();render()});
-    document.querySelector('#form').addEventListener('submit',e=>{e.preventDefault();const text=input.value.trim();error.hidden=true;if(!text)return;if(!startInput.value||!endInput.value||endInput.value<startInput.value){error.textContent='截止时间不能早于开始时间。';error.hidden=false;return}tasks.unshift({id:crypto.randomUUID(),text,done:false,startAt:startInput.value,endAt:endInput.value});input.value='';save();render();input.focus()});
-    list.addEventListener('click',e=>{const item=e.target.closest('.item');if(!item)return;if(e.target.closest('.check'))tasks=tasks.map(t=>t.id===item.dataset.id?{...t,done:!t.done}:t);if(e.target.closest('.delete'))tasks=tasks.filter(t=>t.id!==item.dataset.id);save();render()}); list.addEventListener('change',e=>{const item=e.target.closest('.item');if(!item)return;const task=tasks.find(t=>t.id===item.dataset.id);if(!task)return;const nextStart=item.querySelector('.edit-start').value,nextEnd=item.querySelector('.edit-end').value;if(!nextStart||!nextEnd||nextEnd<nextStart){render();return}task.startAt=nextStart;task.endAt=nextEnd;save();render()});
-    document.querySelectorAll('.filter').forEach(btn=>btn.addEventListener('click',()=>{filter=btn.dataset.filter;document.querySelectorAll('.filter').forEach(b=>b.classList.toggle('active',b===btn));renderTasks()})); document.querySelector('#clearDone').addEventListener('click',()=>{tasks=tasks.filter(t=>!t.done);save();render()}); setDefaultTimes();save();render();
-    if(document.modelContext?.registerTool)Promise.resolve(document.modelContext.registerTool({name:'add_scheduled_todo',title:'添加定时待办',description:'向日程清单添加带开始和截止时间的任务。',inputSchema:{type:'object',properties:{text:{type:'string',minLength:1,maxLength:120},startAt:{type:'string',description:'本地日期时间，格式 YYYY-MM-DDTHH:mm'},endAt:{type:'string',description:'本地日期时间，格式 YYYY-MM-DDTHH:mm'}},required:['text','startAt','endAt'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute({text,startAt,endAt}){const value=typeof text==='string'?text.trim():'';if(!value||value.length>120||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(startAt)||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(endAt)||endAt<startAt)throw new Error('请提供有效的任务内容与起止时间。');const task={id:crypto.randomUUID(),text:value,done:false,startAt,endAt};tasks.unshift(task);save();render();return task}})).catch(()=>{});
+    const KEY='daily-todos-v1',labels={low:'低',medium:'中',high:'高'},scores={low:1,medium:2,high:3};
+    const pad=n=>String(n).padStart(2,'0'),dateKey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,today=dateKey(new Date()),at=(d,t)=>`${d}T${t}`;
+    const slots=Array.from({length:48},(_,i)=>`${pad(Math.floor(i/2))}:${i%2?'30':'00'}`),slotOptions=slots.map(t=>`<option value="${t}">${t}</option>`).join('');
+    document.querySelector('#startTime').innerHTML=slotOptions; document.querySelector('#endTime').innerHTML=slotOptions;
+    const seed=[{id:crypto.randomUUID(),text:'整理今天的优先事项',done:true,startAt:at(today,'09:00'),endAt:at(today,'09:30'),priority:'medium'},{id:crypto.randomUUID(),text:'完成项目方案初稿',done:false,startAt:at(today,'10:00'),endAt:at(today,'12:00'),priority:'high'},{id:crypto.randomUUID(),text:'散步 20 分钟',done:false,startAt:at(today,'18:30'),endAt:at(today,'19:00'),priority:'low'}];
+    let tasks; try{tasks=JSON.parse(localStorage.getItem(KEY))??seed}catch{tasks=seed} tasks=tasks.map((t,i)=>({...t,startAt:t.startAt||at(today,`${pad(9+i)}:00`),endAt:t.endAt||at(today,`${pad(10+i)}:00`),priority:t.priority||'medium'}));
+    let selectedDate=today,visibleMonth=new Date(`${today}T12:00`),filter='all';
+    const $=s=>document.querySelector(s),save=()=>localStorage.setItem(KEY,JSON.stringify(tasks)),esc=v=>{const e=document.createElement('span');e.textContent=v;return e.innerHTML},covers=(t,d)=>t.startAt.slice(0,10)<=d&&t.endAt.slice(0,10)>=d;
+    const formatRange=t=>`${t.startAt.slice(0,10)===today?'今天':t.startAt.slice(5,10)} ${t.startAt.slice(11,16)} → ${t.endAt.slice(0,10)===today?'今天':t.endAt.slice(5,10)} ${t.endAt.slice(11,16)}`;
+    const sortTasks=(a,b)=>scores[b.priority]-scores[a.priority]||a.endAt.localeCompare(b.endAt);
+    function addThirty(){const d=new Date(`${$('#startDate').value}T${$('#startTime').value}:00`);if(Number.isNaN(d.getTime()))return;d.setMinutes(d.getMinutes()+30);$('#endDate').value=dateKey(d);$('#endTime').value=`${pad(d.getHours())}:${pad(d.getMinutes())}`;}
+    function setDefaults(day=selectedDate){$('#startDate').value=day;$('#startTime').value='09:00';addThirty();}
+    function priorityPill(p){return `<span class="priority p-${p}">${labels[p]}</span>`;}
+    function taskRow(t,editable=false){return `<li class="${editable?'task-item':'focus-item'} ${t.done?'done':''}" data-id="${t.id}"><button class="check" type="button" aria-label="${t.done?'标记为未完成':'标记为已完成'}">${t.done?'✓':''}</button><div class="task-main"><span class="task-title">${esc(t.text)}</span><div class="meta">${priorityPill(t.priority)}<span>${formatRange(t)}</span>${t.endAt<new Date().toISOString().slice(0,16)&&!t.done?'<span>已逾期</span>':''}</div>${editable?`<div class="edit-grid"><input class="edit-start-date" type="date" value="${t.startAt.slice(0,10)}" aria-label="开始日期"><select class="edit-start-time" aria-label="开始时间">${slotOptions.replace(`value="${t.startAt.slice(11,16)}"`,`value="${t.startAt.slice(11,16)}" selected`)}</select><input class="edit-end-date" type="date" value="${t.endAt.slice(0,10)}" aria-label="截止日期"><select class="edit-end-time" aria-label="截止时间">${slotOptions.replace(`value="${t.endAt.slice(11,16)}"`,`value="${t.endAt.slice(11,16)}" selected`)}</select><select class="edit-priority" aria-label="紧急程度"><option value="low" ${t.priority==='low'?'selected':''}>低</option><option value="medium" ${t.priority==='medium'?'selected':''}>中</option><option value="high" ${t.priority==='high'?'selected':''}>高</option></select></div>`:''}</div><button class="delete" type="button" aria-label="删除任务">×</button></li>`;}
+    function renderFocus(){const focus=tasks.filter(t=>!t.done||t.startAt.slice(0,10)===today||t.endAt.slice(0,10)===today).sort(sortTasks);$('#focusList').innerHTML=focus.map(t=>taskRow(t)).join('');$('#focusList').hidden=!focus.length;$('#focusEmpty').hidden=!!focus.length;$('#focusCount').textContent=`${focus.filter(t=>!t.done).length} 项未完成`;const todays=tasks.filter(t=>covers(t,today)),done=todays.filter(t=>t.done).length,pct=todays.length?Math.round(done/todays.length*100):0;$('#progress').style.setProperty('--progress',pct+'%');$('#progress span').textContent=pct+'%';}
+    function renderCalendar(){const y=visibleMonth.getFullYear(),m=visibleMonth.getMonth();$('#monthTitle').textContent=`${y} 年 ${m+1} 月`;const offset=(new Date(y,m,1).getDay()+6)%7,total=new Date(y,m+1,0).getDate(),cells=[];for(let i=0;i<offset;i++)cells.push('<span class="day blank"></span>');for(let d=1;d<=total;d++){const key=`${y}-${pad(m+1)}-${pad(d)}`,count=tasks.filter(t=>covers(t,key)).length;cells.push(`<button type="button" class="day ${key===today?'today':''} ${key===selectedDate?'selected':''}" data-date="${key}" aria-label="${m+1}月${d}日，${count}项任务">${d}${count?`<span class="badge">${count}</span>`:''}</button>`)}$('#calendarDays').innerHTML=cells.join('');}
+    function renderDay(){const day=tasks.filter(t=>covers(t,selectedDate)).sort(sortTasks),shown=day.filter(t=>filter==='all'||(filter==='done'?t.done:!t.done));$('#dayList').innerHTML=shown.map(t=>taskRow(t,true)).join('');$('#dayList').hidden=!shown.length;$('#dayEmpty').hidden=!!shown.length;$('#selectedLabel').textContent=new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(`${selectedDate}T12:00`));}
+    const render=()=>{renderFocus();renderCalendar();renderDay();save();};
+    $('#todayLabel').textContent=new Intl.DateTimeFormat('zh-CN',{month:'long',day:'numeric',weekday:'long'}).format(new Date()); setDefaults(today); render();
+    $('#startDate').addEventListener('change',addThirty); $('#startTime').addEventListener('change',addThirty);
+    $('#form').addEventListener('submit',e=>{e.preventDefault();const text=$('#taskInput').value.trim(),startAt=at($('#startDate').value,$('#startTime').value),endAt=at($('#endDate').value,$('#endTime').value);$('#formError').hidden=true;if(!text)return;if(endAt<startAt){$('#formError').textContent='截止时间不能早于开始时间。';$('#formError').hidden=false;return}tasks.push({id:crypto.randomUUID(),text,done:false,startAt,endAt,priority:$('#priorityInput').value});$('#taskInput').value='';render();});
+    function listClick(e){const item=e.target.closest('li[data-id]');if(!item)return;if(e.target.closest('.check'))tasks=tasks.map(t=>t.id===item.dataset.id?{...t,done:!t.done}:t);if(e.target.closest('.delete'))tasks=tasks.filter(t=>t.id!==item.dataset.id);render();}
+    $('#focusList').addEventListener('click',listClick); $('#dayList').addEventListener('click',listClick);
+    $('#dayList').addEventListener('change',e=>{const item=e.target.closest('li[data-id]');if(!item)return;const t=tasks.find(x=>x.id===item.dataset.id),startAt=at(item.querySelector('.edit-start-date').value,item.querySelector('.edit-start-time').value),endAt=at(item.querySelector('.edit-end-date').value,item.querySelector('.edit-end-time').value);if(endAt<startAt){renderDay();return}t.startAt=startAt;t.endAt=endAt;t.priority=item.querySelector('.edit-priority').value;render();});
+    $('#calendarDays').addEventListener('click',e=>{const b=e.target.closest('[data-date]');if(!b)return;selectedDate=b.dataset.date;visibleMonth=new Date(`${selectedDate}T12:00`);setDefaults(selectedDate);render();}); $('#prevMonth').addEventListener('click',()=>{visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth()-1,1);renderCalendar()}); $('#nextMonth').addEventListener('click',()=>{visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth()+1,1);renderCalendar()}); $('#goToday').addEventListener('click',()=>{selectedDate=today;visibleMonth=new Date(`${today}T12:00`);setDefaults(today);render();});
+    document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));renderDay()})); $('#clearDone').addEventListener('click',()=>{tasks=tasks.filter(t=>!t.done);render();});
+    if(document.modelContext?.registerTool)Promise.resolve(document.modelContext.registerTool({name:'add_prioritized_todo',title:'添加优先任务',description:'添加带起止时间和紧急程度的任务。',inputSchema:{type:'object',properties:{text:{type:'string',minLength:1,maxLength:120},startAt:{type:'string'},endAt:{type:'string'},priority:{type:'string',enum:['low','medium','high']}},required:['text','startAt','endAt','priority'],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute({text,startAt,endAt,priority}){const value=typeof text==='string'?text.trim():'';if(!value||!/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):(?:00|30)$/.test(startAt)||!/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):(?:00|30)$/.test(endAt)||endAt<startAt||!labels[priority])throw new Error('任务内容、时间或紧急程度无效。');const task={id:crypto.randomUUID(),text:value,done:false,startAt,endAt,priority};tasks.push(task);render();return task;}})).catch(()=>{});
   </script>
 </body>
 </html>
